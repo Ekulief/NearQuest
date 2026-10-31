@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 
 type QuestRoute = 'map' | 'quests' | 'profile' | 'quest'
-type Filter = 'Daily Commissions (3)' | 'Sponsored Trails' | 'Completed'
+type Filter = 'Daily Commissions (3)' | 'Themed Trails' | 'Completed'
 
 const activeQuests = [
   {
@@ -36,6 +36,28 @@ const activeQuests = [
   },
 ]
 
+// Themed trails: the visitor picks which stops to do. Partner businesses appear as ordinary stops.
+const themedTrails = [
+  { id: 'coffee', icon: 'coffee', title: 'Baguio Specialty Coffee Trail', blurb: 'Choose any 5 of 8 cafes · Half day', reward: '500', badge: 'Coffee Master Badge' },
+  { id: 'crafts', icon: 'location', title: 'Crafts & Heritage Trail', blurb: 'Choose any 3 of 6 workshops · 2–3 hrs', reward: '400', badge: 'Heritage Keeper Badge' },
+  { id: 'pines', icon: 'leaf', title: 'Pine Views & Fresh Air', blurb: 'Choose any 3 of 5 viewpoints · 2 hrs', reward: '350', badge: 'Pine Wanderer Badge' },
+]
+
+function ThemedTrailCard({ trail }: { trail: (typeof themedTrails)[number] }) {
+  return (
+    <section className="sponsor-trail">
+      <div className="sponsor-icon"><QuestIcon name={trail.icon} size={25} /></div>
+      <div className="sponsor-copy">
+        <span>THEMED TRAIL</span>
+        <strong>{trail.title}</strong>
+        <p>{trail.blurb}</p>
+        <div><b>{trail.reward} EXP</b><i>+</i><b>{trail.badge}</b></div>
+      </div>
+      <QuestIcon name="arrow" size={18} />
+    </section>
+  )
+}
+
 function QuestIcon({ name, size = 20 }: { name: string; size?: number }) {
   const paths: Record<string, ReactNode> = {
     map: <><path d="m3 6 5-3 8 3 5-3v15l-5 3-8-3-5 3Z" /><path d="M8 3v15M16 6v15" /></>,
@@ -44,6 +66,7 @@ function QuestIcon({ name, size = 20 }: { name: string; size?: number }) {
     location: <><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
     spark: <path d="m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7Z" />,
     arrow: <path d="m9 18 6-6-6-6" />,
+    leaf: <><path d="M5 19c0-9 5-14 14-14 0 9-5 14-14 14Z" /><path d="m5 19 8-8" /></>,
     coffee: <><path d="M5 9h12v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5Z" /><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17M8 5c0-1 1-1 1-2M12 5c0-1 1-1 1-2" /></>,
   }
   return (
@@ -83,7 +106,7 @@ export default function QuestsScreen({
   onSelectQuest: (id: string) => void 
 }) {
   const [filter, setFilter] = useState<Filter>('Daily Commissions (3)')
-  const filters: Filter[] = ['Daily Commissions (3)', 'Sponsored Trails', 'Completed']
+  const filters: Filter[] = ['Daily Commissions (3)', 'Themed Trails', 'Completed']
 
   return (
     <div className="screen quests-screen">
@@ -112,10 +135,10 @@ export default function QuestsScreen({
       <main className="quests-scroll">
         <div className="active-list-heading">
           <span>{filter === 'Daily Commissions (3)' ? 'TODAY’S ACTIVE DECK' : filter.toUpperCase()}</span>
-          <strong>{filter === 'Daily Commissions (3)' ? '3 quests' : 'Coming soon'}</strong>
+          <strong>{filter === 'Daily Commissions (3)' ? '3 quests' : filter === 'Themed Trails' ? `${themedTrails.length} trails` : 'None yet'}</strong>
         </div>
 
-        {filter === 'Daily Commissions (3)' ? (
+        {filter === 'Daily Commissions (3)' && (
           <>
             <div className="active-quest-list">
               {activeQuests.map((quest) => (
@@ -131,9 +154,9 @@ export default function QuestsScreen({
                     <p>{quest.description}</p>
                     <div className="quest-progress-row"><span>{quest.progress}</span><strong>0%</strong></div>
                     <div className="quest-progress-track"><i /></div>
-                    <button 
-                      type="button" 
-                      className="start-quest-button" 
+                    <button
+                      type="button"
+                      className="start-quest-button"
                       onClick={() => {
                         onSelectQuest(quest.id)
                         go('quest')
@@ -145,37 +168,25 @@ export default function QuestsScreen({
                 </article>
               ))}
             </div>
-
-            <section className="sponsor-trail">
-              <div className="sponsor-icon"><QuestIcon name="coffee" size={25} /></div>
-              <div className="sponsor-copy">
-                <span>SPONSORED HERITAGE TRAIL</span>
-                <strong>Baguio Specialty Coffee Trail</strong>
-                <p>0/5 Cafes Verified</p>
-                <div><b>500 EXP</b><i>+</i><b>Coffee Master Badge</b></div>
-              </div>
-              <QuestIcon name="arrow" size={18} />
-            </section>
+            <ThemedTrailCard trail={themedTrails[0]} />
           </>
-        ) : (
-          <div className="quest-empty-state">
-            <QuestIcon name={filter === 'Sponsored Trails' ? 'coffee' : 'spark'} size={30} />
-            <strong>{filter === 'Sponsored Trails' ? 'More local trails are brewing' : 'No completed quests yet'}</strong>
-            <p>{filter === 'Sponsored Trails' ? 'Check the featured coffee trail below.' : 'Your cleared commissions will appear here.'}</p>
-          </div>
         )}
 
-        {filter === 'Sponsored Trails' && (
-          <section className="sponsor-trail sponsor-filter-card">
-            <div className="sponsor-icon"><QuestIcon name="coffee" size={25} /></div>
-            <div className="sponsor-copy">
-              <span>FEATURED TRAIL</span>
-              <strong>Baguio Specialty Coffee Trail</strong>
-              <p>0/5 Cafes Verified</p>
-              <div><b>500 EXP</b><i>+</i><b>Coffee Master Badge</b></div>
-            </div>
-            <QuestIcon name="arrow" size={18} />
-          </section>
+        {filter === 'Themed Trails' && (
+          <>
+            <p className="trail-intro">Short on time? Pick a theme, then choose the stops that fit your day.</p>
+            {themedTrails.map((trail) => (
+              <ThemedTrailCard trail={trail} key={trail.id} />
+            ))}
+          </>
+        )}
+
+        {filter === 'Completed' && (
+          <div className="quest-empty-state">
+            <QuestIcon name="spark" size={30} />
+            <strong>No completed quests yet</strong>
+            <p>Your cleared commissions will appear here.</p>
+          </div>
         )}
       </main>
 
